@@ -2,8 +2,8 @@
     GD50 2018
     Pong Remake
 
-    pong-12
-    "The Resize Update"
+    pong-final
+    "The AI Update"
 
     -- Main Program --
 
@@ -77,12 +77,17 @@ function love.load()
     scoreFont = love.graphics.newFont('font.ttf', 32)
     love.graphics.setFont(smallFont)
 
-    -- set up our sound effects; later, we can just index this table and
-    -- call each entry's `play` method
+    -- A good rule of thumb is to use stream for music files and static for all short sound effects. 
+    -- Basically, you want to avoid loading large files into memory at once.
     sounds = {
         ['paddle_hit'] = love.audio.newSource('sounds/paddle_hit.wav', 'static'),
         ['score'] = love.audio.newSource('sounds/score.wav', 'static'),
         ['wall_hit'] = love.audio.newSource('sounds/wall_hit.wav', 'static')
+    }
+
+    music = {
+        ['retro_platforming'] = love.audio.newSource('sounds/retro_platforming.mp3', 'stream'),
+        ['funny_bit'] = love.audio.newSource('sounds/funny_bit.mp3', 'stream')
     }
 
     -- initialize window with virtual resolution
@@ -109,10 +114,14 @@ function love.load()
     -- place a ball in the middle of the screen
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, BALL_WIDTH, BALL_HEIGHT)
 
-    -- game state variable used to transition between different parts of the game
-    -- (used for beginning, menus, main game, high score list, etc.)
-    -- we will use this to determine behavior during render and update
+    -- the state of our game; can be any of the following:
+    -- 1. 'start' (the beginning of the game, before first serve)
+    -- 2. 'serve' (waiting on a key press to serve the ball)
+    -- 3. 'play' (the ball is in play, bouncing between paddles)
+    -- 4. 'done' (the game is over, with a victor, ready for restart)
     gameState = 'start'
+
+    fpsDisplay = false
 end
 
 --[[
@@ -129,6 +138,7 @@ end
 ]]
 function love.update(dt)
     if gameState == 'serve' then
+        music['retro_platforming']:play()
         -- before switching to play, initialize ball's velocity based
         -- on player who last scored
         ball.dy = math.random(-50, 50)
@@ -138,6 +148,7 @@ function love.update(dt)
             ball.dx = -math.random(140, 200)
         end
     elseif gameState == 'play' then
+        music['retro_platforming']:play()
         -- detect ball collision with paddles, reversing dx if true and
         -- slightly increasing it, then altering the dy based on the position
         if ball:collides(player1) then
@@ -190,6 +201,7 @@ function love.update(dt)
             if player2Score == MAX_SCORE then
                 winningPlayer = 2
                 gameState = 'done'
+                music['retro_platforming']:stop()
             else
                 gameState = 'serve'
                 -- places the ball in the middle of the screen, no velocity
@@ -204,6 +216,7 @@ function love.update(dt)
             if player1Score == MAX_SCORE then
                 winningPlayer = 1
                 gameState = 'done'
+                music['retro_platforming']:stop()
             else
                 gameState = 'serve'
                 ball:reset()
@@ -221,7 +234,9 @@ function love.update(dt)
         player1.dy = 0
     end
 
+
     -- player 2 movement
+    --[[
     if love.keyboard.isDown('up') then
         player2.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('down') then
@@ -229,6 +244,41 @@ function love.update(dt)
     else
         player2.dy = 0
     end
+    ]]
+
+    -- AI movement
+    -- Specification:
+    --[[
+        Implement an AI-controlled paddle (either the left or the right will do) 
+        such that it will try to deflect the ball at all times. Since the paddle 
+        can move on only one axis (the Y axis), you will need to determine how 
+        to keep the paddle moving in relation to the ball. Currently, each paddle 
+        has its own chunk of code where input is detected by the keyboard; this 
+        feels like an excellent place to put the code we need! Once either the 
+        left or right paddle (or both, if desired) try to deflect the paddle on 
+        their own, you’ve done it!
+    ]]
+    
+    -- Method 1
+    --[[
+    player2.y = ball.y - PADDLE_HEIGHT / 2
+    ]]
+
+    -- Method 2
+    -- [[
+    if ball.y < player2.y + PADDLE_HEIGHT / 2 then
+        player2.dy = -PADDLE_SPEED
+    elseif ball.y > player2.y + PADDLE_HEIGHT / 2  then
+        player2.dy = PADDLE_SPEED
+    else
+        player2.dy = 0
+    end
+    -- ]]
+    
+    -- Method 3
+    --[[
+    player2.dy = ball.dy
+    ]]
 
     -- update our ball based on its DX and DY only if we're in play state;
     -- scale the velocity by dt so movement is framerate-independent
@@ -245,7 +295,7 @@ end
     passes in the key we pressed so we can access.
 ]]
 function love.keypressed(key)
-    if key == 'escape' then
+    if key == 'backspace' then
         -- function LÖVE gives us to terminate application
         love.event.quit()
     -- if we press enter during the start or serve phase, it should
@@ -273,6 +323,8 @@ function love.keypressed(key)
                 servingPlayer = 1
             end
         end
+    elseif key == 'tab' then
+        fpsDisplay = not fpsDisplay
     end
 end
 
@@ -313,11 +365,19 @@ function love.draw()
         love.graphics.printf('Press Enter to restart!', 0, 30, VIRTUAL_WIDTH, 'center')
     end
 
+    love.graphics.setColor(255,0,0)
     player1:render()
+    love.graphics.setColor(0,255,0)
     player2:render()
+    love.graphics.setColor(0,0,255)
     ball:render()
+    -- reset colours
+    love.graphics.setColor(255,255,255)
+    
 
-    displayFPS()
+    if fpsDisplay then
+        displayFPS()
+    end
 
     -- end rendering at virtual resolution
     push:apply('end')
