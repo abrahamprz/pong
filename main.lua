@@ -2,8 +2,8 @@
     GD50 2018
     Pong Remake
 
-    pong-5
-    "The Class Update"
+    pong-6
+    "The FPS Update"
 
     -- Main Program --
 
@@ -60,6 +60,9 @@ PADDLE_VERTICAL_OFFSET = 30
 ]]
 function love.load()
     love.graphics.setDefaultFilter('nearest', 'nearest')
+
+    -- set the title of our application window
+    love.window.setTitle('Pong 2024')
 
     -- "seed" the RNG so that calls to random are always random
     -- use the current time, since that will vary on startup every time
@@ -177,6 +180,14 @@ function love.draw()
         love.graphics.printf('Hello Play State!', 0, 20, VIRTUAL_WIDTH, 'center')
     end
 
+    -- draw score on the left and right center of the screen
+    -- need to switch font to draw before actually printing
+    love.graphics.setFont(scoreFont)
+    love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50, 
+        VIRTUAL_HEIGHT / 3)
+    love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
+        VIRTUAL_HEIGHT / 3)
+
     -- render paddles, now using their class's render method
     player1:render()
     player2:render()
@@ -184,6 +195,19 @@ function love.draw()
     -- render ball using its class's render method
     ball:render()
 
+    -- new function just to demonstrate how to see FPS in LÖVE2D
+    displayFPS()
+
     -- end rendering at virtual resolution
     push:apply('end')
+end
+
+--[[
+    Renders the current FPS.
+]]
+function displayFPS()
+    -- simple FPS display across all states
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(0, 255/255, 0, 255/255)
+    love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end
