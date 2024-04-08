@@ -2,8 +2,8 @@
     GD50 2018
     Pong Remake
 
-    pong-8
-    "The Score Update"
+    pong-9
+    "The Serve Update"
 
     -- Main Program --
 
@@ -92,6 +92,10 @@ function love.load()
     player1Score = 0
     player2Score = 0
 
+    -- either going to be 1 or 2; whomever is scored on gets to serve the
+    -- following turn
+    servingPlayer = 1
+
     -- initialize our player paddles; make them global so that they can be
     -- detected by other functions and modules
     player1 = Paddle(PADDLE_HORIZONTAL_OFFSET, PADDLE_VERTICAL_OFFSET, PADDLE_WIDTH, PADDLE_HEIGHT)
@@ -111,7 +115,16 @@ end
     since the last frame, which LÖVE2D supplies us.
 ]]
 function love.update(dt)
-    if gameState == 'play' then
+    if gameState == 'serve' then
+        -- before switching to play, initialize ball's velocity based
+        -- on player who last scored
+        ball.dy = math.random(-50, 50)
+        if servingPlayer == 1 then
+            ball.dx = math.random(140, 200)
+        else
+            ball.dx = -math.random(140, 200)
+        end
+    elseif gameState == 'play' then
         -- detect ball collision with paddles, reversing dx if true and
         -- slightly increasing it, then altering the dy based on the position
         if ball:collides(player1) then
@@ -128,7 +141,7 @@ function love.update(dt)
 
         if ball:collides(player2) then
             ball.dx = -ball.dx * 1.03
-            ball.x = player2.x - 5
+            ball.x = player2.x - 4
 
             -- keep velocity going in the same direction, but randomize it
             if ball.dy < 0 then
@@ -203,16 +216,13 @@ function love.keypressed(key)
     if key == 'escape' then
         -- function LÖVE gives us to terminate application
         love.event.quit()
-    -- if we press enter during the start state of the game, we'll go into play mode
-    -- during play mode, the ball will move in a random direction
+    -- if we press enter during the start or serve phase, it should
+    -- transition to the next appropriate state
     elseif key == 'enter' or key == 'return' then
         if gameState == 'start' then
+            gameState = 'serve'
+        elseif gameState == 'serve' then
             gameState = 'play'
-        else
-            gameState = 'start'
-
-            -- ball's new reset method
-            ball:reset()
         end
     end
 end
@@ -232,19 +242,20 @@ function love.draw()
     -- draw welcome text toward the top of the screen
     love.graphics.setFont(smallFont)
 
-    if gameState == 'start' then
-        love.graphics.printf('Hello Start State!', 0, 20, VIRTUAL_WIDTH, 'center')
-    else
-        love.graphics.printf('Hello Play State!', 0, 20, VIRTUAL_WIDTH, 'center')
-    end
+    displayScore()
 
-    -- draw score on the left and right center of the screen
-    -- need to switch font to draw before actually printing
-    love.graphics.setFont(scoreFont)
-    love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50, 
-        VIRTUAL_HEIGHT / 3)
-    love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
-        VIRTUAL_HEIGHT / 3)
+    if gameState == 'start' then
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'serve' then
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Player ' .. tostring(servingPlayer) .. "'s serve!", 
+            0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to serve!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'play' then
+        -- no UI messages to display in play
+    end
 
     -- render paddles, now using their class's render method
     player1:render()
@@ -268,4 +279,17 @@ function displayFPS()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(0, 255/255, 0, 255/255)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
+end
+
+--[[
+    Simply draws the score to the screen.
+]]
+function displayScore()
+    -- draw score on the left and right center of the screen
+    -- need to switch font to draw before actually printing
+    love.graphics.setFont(scoreFont)
+    love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50, 
+        VIRTUAL_HEIGHT / 3)
+    love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
+        VIRTUAL_HEIGHT / 3)
 end
