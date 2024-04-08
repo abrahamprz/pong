@@ -2,8 +2,8 @@
     GD50 2018
     Pong Remake
 
-    pong-6
-    "The FPS Update"
+    pong-7
+    "The Collision Update"
 
     -- Main Program --
 
@@ -55,6 +55,9 @@ PADDLE_HEIGHT = 20
 PADDLE_HORIZONTAL_OFFSET = 10
 PADDLE_VERTICAL_OFFSET = 30
 
+BALL_WIDTH = 4
+BALL_HEIGHT = 4
+
 --[[
     Runs when the game first starts up, only once; used to initialize the game.
 ]]
@@ -95,7 +98,7 @@ function love.load()
     player2 = Paddle(VIRTUAL_WIDTH - PADDLE_HORIZONTAL_OFFSET, VIRTUAL_HEIGHT - PADDLE_VERTICAL_OFFSET, PADDLE_WIDTH, PADDLE_HEIGHT)
 
     -- place a ball in the middle of the screen
-    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
+    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, BALL_WIDTH, BALL_HEIGHT)
 
     -- game state variable used to transition between different parts of the game
     -- (used for beginning, menus, main game, high score list, etc.)
@@ -108,6 +111,45 @@ end
     since the last frame, which LÖVE2D supplies us.
 ]]
 function love.update(dt)
+    if gameState == 'play' then
+        -- detect ball collision with paddles, reversing dx if true and
+        -- slightly increasing it, then altering the dy based on the position
+        if ball:collides(player1) then
+            ball.dx = -ball.dx * 1.03
+            ball.x = player1.x + 5
+
+            -- keep velocity going in the same direction, but randomize it
+            if ball.dy < 0 then
+                ball.dy = -math.random(10, 150)
+            else
+                ball.dy = math.random(10, 150)
+            end
+        end
+
+        if ball:collides(player2) then
+            ball.dx = -ball.dx * 1.03
+            ball.x = player2.x - 5
+
+            -- keep velocity going in the same direction, but randomize it
+            if ball.dy < 0 then
+                ball.dy = -math.random(10, 150)
+            else
+                ball.dy = math.random(10, 150)
+            end
+        end
+
+        -- detect upper and lower screen boundary collision and reverse if collided
+        if ball.y <= 0 then
+            ball.y = 0
+            ball.dy = -ball.dy
+        end
+
+        if ball.y >= VIRTUAL_HEIGHT - BALL_HEIGHT then
+            ball.y = VIRTUAL_HEIGHT - BALL_HEIGHT
+            ball.dy = -ball.dy
+        end
+    end
+
     -- player 1 movement
     if love.keyboard.isDown('w') then
         player1.dy = -PADDLE_SPEED
