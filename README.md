@@ -7,6 +7,12 @@ This code follows the Pong project from the CS50’s Introduction to Game Develo
 - [x] Implement a basic AI for either Player 1 or 2 (or both!).
 
 
+## Running the Game
+This game is built using the [LÖVE](https://love2d.org/) framework. To run the game, you'll need to have LÖVE installed on your machine.
+
+You can follow the [Getting Started](https://love2d.org/wiki/Getting_Started) guide on the LÖVE website to install the framework and run the game.
+
+
 ## Music Credits
 Music used in this project is from [Fesliyan Studios](https://www.fesliyanstudios.com):
 
