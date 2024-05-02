@@ -59,6 +59,10 @@ BALL_HEIGHT = 4
 
 MAX_SCORE = 3
 
+-- New game mode selection
+gameModes = {'Player vs Player', 'Player vs AI', 'AI vs AI'}
+selectedMode = 1
+
 --[[
     Runs when the game first starts up, only once; used to initialize the game.
 ]]
@@ -119,7 +123,8 @@ function love.load()
     -- 2. 'serve' (waiting on a key press to serve the ball)
     -- 3. 'play' (the ball is in play, bouncing between paddles)
     -- 4. 'done' (the game is over, with a victor, ready for restart)
-    gameState = 'start'
+    -- 5. 'menu' (the game mode selection menu)
+    gameState = 'menu'
 
     fpsDisplay = false
 end
@@ -224,7 +229,6 @@ function love.update(dt)
         end
     end
 
-
     -- player 1 movement
     if love.keyboard.isDown('w') then
         player1.dy = -PADDLE_SPEED
@@ -234,51 +238,35 @@ function love.update(dt)
         player1.dy = 0
     end
 
-
-    -- player 2 movement
-    --[[
-    if love.keyboard.isDown('up') then
-        player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then
-        player2.dy = PADDLE_SPEED
-    else
-        player2.dy = 0
+    -- player 2 movement based on game mode
+    if selectedMode == 1 then -- Player vs Player
+        if love.keyboard.isDown('up') then
+            player2.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('down') then
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
+    elseif selectedMode == 2 or selectedMode == 3 then -- Player vs AI or AI vs AI
+        if ball.y < player2.y + PADDLE_HEIGHT / 2 then
+            player2.dy = -PADDLE_SPEED
+        elseif ball.y > player2.y + PADDLE_HEIGHT / 2  then
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
     end
-    ]]
 
-    -- AI movement
-    -- Specification:
-    --[[
-        Implement an AI-controlled paddle (either the left or the right will do) 
-        such that it will try to deflect the ball at all times. Since the paddle 
-        can move on only one axis (the Y axis), you will need to determine how 
-        to keep the paddle moving in relation to the ball. Currently, each paddle 
-        has its own chunk of code where input is detected by the keyboard; this 
-        feels like an excellent place to put the code we need! Once either the 
-        left or right paddle (or both, if desired) try to deflect the paddle on 
-        their own, you’ve done it!
-    ]]
-    
-    -- Method 1
-    --[[
-    player2.y = ball.y - PADDLE_HEIGHT / 2
-    ]]
-
-    -- Method 2
-    -- [[
-    if ball.y < player2.y + PADDLE_HEIGHT / 2 then
-        player2.dy = -PADDLE_SPEED
-    elseif ball.y > player2.y + PADDLE_HEIGHT / 2  then
-        player2.dy = PADDLE_SPEED
-    else
-        player2.dy = 0
+    -- AI vs AI mode: control player 1 with AI
+    if selectedMode == 3 then
+        if ball.y < player1.y + PADDLE_HEIGHT / 2 then
+            player1.dy = -PADDLE_SPEED
+        elseif ball.y > player1.y + PADDLE_HEIGHT / 2  then
+            player1.dy = PADDLE_SPEED
+        else
+            player1.dy = 0
+        end
     end
-    -- ]]
-    
-    -- Method 3
-    --[[
-    player2.dy = ball.dy
-    ]]
 
     -- update our ball based on its DX and DY only if we're in play state;
     -- scale the velocity by dt so movement is framerate-independent
@@ -322,9 +310,17 @@ function love.keypressed(key)
             else
                 servingPlayer = 1
             end
+        elseif gameState == 'menu' then
+            gameState = 'start'
         end
     elseif key == 'tab' then
         fpsDisplay = not fpsDisplay
+    elseif gameState == 'menu' then
+        if key == 'up' then
+            selectedMode = math.max(1, selectedMode - 1)
+        elseif key == 'down' then
+            selectedMode = math.min(#gameModes, selectedMode + 1)
+        end
     end
 end
 
@@ -363,6 +359,18 @@ function love.draw()
             0, 10, VIRTUAL_WIDTH, 'center')
         love.graphics.setFont(smallFont)
         love.graphics.printf('Press Enter to restart!', 0, 30, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'menu' then
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Select Game Mode:', 0, 10, VIRTUAL_WIDTH, 'center')
+        for i, mode in ipairs(gameModes) do
+            if i == selectedMode then
+                love.graphics.setColor(0, 255, 0, 255)
+            else
+                love.graphics.setColor(255, 255, 255, 255)
+            end
+            love.graphics.printf(mode, 0, 20 + i * 10, VIRTUAL_WIDTH, 'center')
+        end
+        love.graphics.setColor(255, 255, 255, 255)
     end
 
     love.graphics.setColor(255,0,0)
