@@ -248,23 +248,39 @@ function love.update(dt)
             player2.dy = 0
         end
     elseif selectedMode == 2 or selectedMode == 3 then -- Player vs AI or AI vs AI
-        if ball.y < player2.y + PADDLE_HEIGHT / 2 then
-            player2.dy = -PADDLE_SPEED
-        elseif ball.y > player2.y + PADDLE_HEIGHT / 2  then
-            player2.dy = PADDLE_SPEED
+        -- Introduce a random factor to AI paddle movement to simulate varied movements
+        local movementRandomizer = math.random()
+        if movementRandomizer > 0.1 then -- 90% chance to follow the ball
+            if ball.y < player2.y + PADDLE_HEIGHT / 2 then
+                player2.dy = -PADDLE_SPEED
+            elseif ball.y > player2.y + PADDLE_HEIGHT / 2  then
+                player2.dy = PADDLE_SPEED
+            else
+                player2.dy = 0
+            end
         else
-            player2.dy = 0
+            player2.dy = 0 -- 10% chance to not move, simulating a miss
+        end
+
+        -- Implement a mechanism to occasionally adjust AI paddle speed randomly
+        if math.random() > 0.85 then -- 15% chance to adjust speed
+            player2.dy = player2.dy * math.random(0.5, 1.5)
         end
     end
 
     -- AI vs AI mode: control player 1 with AI
     if selectedMode == 3 then
-        if ball.y < player1.y + PADDLE_HEIGHT / 2 then
-            player1.dy = -PADDLE_SPEED
-        elseif ball.y > player1.y + PADDLE_HEIGHT / 2  then
-            player1.dy = PADDLE_SPEED
+        -- Add a condition to randomly decide if the AI should miss the ball
+        if math.random() > 0.15 then -- 85% chance to attempt to hit the ball
+            if ball.y < player1.y + PADDLE_HEIGHT / 2 then
+                player1.dy = -PADDLE_SPEED
+            elseif ball.y > player1.y + PADDLE_HEIGHT / 2  then
+                player1.dy = PADDLE_SPEED
+            else
+                player1.dy = 0
+            end
         else
-            player1.dy = 0
+            player1.dy = 0 -- 15% chance to not move, simulating a miss
         end
     end
 
