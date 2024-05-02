@@ -250,7 +250,7 @@ function love.update(dt)
     elseif selectedMode == 2 or selectedMode == 3 then -- Player vs AI or AI vs AI
         -- Introduce a random factor to AI paddle movement to simulate varied movements
         local movementRandomizer = math.random()
-        if movementRandomizer > 0.1 then -- 90% chance to follow the ball
+        if movementRandomizer > 0.5 then -- 50% chance to follow the ball
             if ball.y < player2.y + PADDLE_HEIGHT / 2 then
                 player2.dy = -PADDLE_SPEED
             elseif ball.y > player2.y + PADDLE_HEIGHT / 2  then
